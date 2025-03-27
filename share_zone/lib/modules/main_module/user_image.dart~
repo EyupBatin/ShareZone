@@ -1,0 +1,47 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:share_zone/constants/size.dart';
+import 'package:share_zone/controller/image_controller.dart';
+import 'package:share_zone/controller/user_controller.dart';
+import 'package:share_zone/services/api_service.dart';
+
+class UserImage extends StatelessWidget {
+  bool isBig;
+  String user_id;
+  UserImage({required this.isBig, required this.user_id});
+  double imageSize=userProfileImageSize;
+  final UserController userController = Get.find();
+
+  @override
+  Widget build(BuildContext context) {
+    if(!isBig){
+      imageSize=tinyUserProfileImageSize;
+    }
+    final ImageController imageController = Get.put(ImageController(), tag: user_id);
+
+    return FutureBuilder<void>(
+      future: ApiService.fetchProfileImage(user_id, imageController),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator()); // Yükleniyor göstergesi
+        } else if (snapshot.hasError) {
+          return const Center(child: Text("Error loading image"));
+        }
+
+        return Container(
+          alignment: Alignment.topLeft,
+          margin: const EdgeInsets.fromLTRB(10, 10, 0, 15),
+          child: CircleAvatar(
+            backgroundImage: imageController.getImageUrl() != null &&
+                imageController.getImageUrl()!.isNotEmpty
+                ? MemoryImage(base64Decode(imageController.getImageUrl()!))
+                : const AssetImage('assets/images/image_view_profile.png')
+            as ImageProvider,
+            radius: imageSize,
+          ),
+        );
+      },
+    );
+  }
+}

@@ -1,0 +1,69 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:share_zone/constants/color.dart';
+import 'package:share_zone/controller/user_controller.dart';
+import 'package:share_zone/modules/main_module/my_navigation_bar.dart';
+import 'package:share_zone/screens/exploration_screen/widgets/exploration_app_bar.dart';
+import 'package:share_zone/screens/exploration_screen/widgets/searchBox.dart';
+import 'package:share_zone/screens/other_user_profile_screen/other_user_profile_screen.dart';
+
+class ExplorationScreen extends StatefulWidget {
+  const ExplorationScreen({super.key});
+
+  @override
+  State<ExplorationScreen> createState() => _ExplorationScreenState();
+}
+
+class _ExplorationScreenState extends State<ExplorationScreen> {
+  int myIndex = 1;
+  final UserController userController = Get.find();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: bgColor,
+      appBar: ExplorationAppBar(),
+      body: Column(
+        children: [
+          SearchBox(),
+          Expanded(
+            child: Obx(() {
+              // filteredUserNames, UserController içinde RxList olarak tanımlanmalı.
+              var userList = userController.filteredUserNames;
+              if (userList.isEmpty) {
+                return Center(child: Text("No users found"));
+              }
+              return ListView.builder(
+                itemCount: userList.length,
+                itemBuilder: (context, index) {
+                  var user = userList[index];
+                  // name ve surname'i birleştiriyoruz
+                  String fullName = '${user['name']} ${user['surname']}';
+                  return Card(
+                    margin: EdgeInsets.all(5.0),
+                    color: cardColor,
+                    child: ListTile(
+                      title: Text(fullName),
+                      onTap: () {
+                        String selectedId = user['id'].toString();
+                        userController.setUserIdController(selectedId);
+                        Get.to(
+                          () => OtherUserProfileScreen(
+                            user_id: userController.getUserIdController(),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ],
+      ),
+      bottomNavigationBar: MyNavigationBar(
+        myIndex: myIndex,
+      ),
+    );
+  }
+}
